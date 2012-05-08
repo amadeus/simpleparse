@@ -1,3 +1,17 @@
+/*
+ *
+ *	name: SimpleParse
+ *
+ *	description: A simple parser
+ *
+ *	license: MIT-style license
+ *
+ *	author: Amadeus Demarzi
+ *
+ *	provides: window.SimpleParse
+ *
+ */
+
 (function(){
 
 if (!window.String.prototype.startsWith){
