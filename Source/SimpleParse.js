@@ -54,7 +54,7 @@ var SimpleParse = window.SimpleParse = {
 			});
 		});
 
-		return reference.string;
+		return reference.string.trim();
 	},
 
 	decode: function(string){
@@ -98,9 +98,6 @@ var SimpleParse = window.SimpleParse = {
 			},
 
 			decode: function(string){
-				// TODO: Parse out links...
-
-				// Add to section
 				return {
 					type: 'paragraph',
 					content: string.trim()
@@ -128,10 +125,10 @@ var Internal = {
 		// First check to see if we have a data model this module
 		Object.each(SimpleParse.Modules, function(obj, key){
 			if (parsedModule) return;
-			var match = key.toUpperCase() + ':', module;
+			var match = key.toUpperCase() + ':', module, cleaned;
 			if (string.startsWith(match)) {
-				string = Internal.cleanKeyFromString(key, string);
-				module = obj.decode(string);
+				cleaned = Internal.cleanKeyFromString(key, string);
+				module = obj.decode(cleaned);
 				if (!module) return;
 				reference.section.modules.push(module);
 				parsedModule = true;
