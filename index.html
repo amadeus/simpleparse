@@ -11,6 +11,12 @@
 			padding:10px;
 			text-align:center;
 		}
+
+		.left {
+			float:left;
+			margin-right:20px;
+		}
+
 		textarea {
 			display:block;
 			margin:0 auto 20px;
@@ -37,7 +43,8 @@
 	</style>
 </head>
 <body>
-	<textarea id="content">
+	<div class="left">
+		<textarea id="content-markup">
 INTRO:
 This is an intro paragraph
 
@@ -48,16 +55,24 @@ This is another paragraph
 
 STEP: Visit a store
 CODE: PROMO_CODE, Pin Code
-MAP: http://google-maps-link.com, Find Best Buy Stores
+MAP: http://google-maps-link.com, file.jpg, Find Best Buy Stores
 
 STEP: QR Code
 IMAGE: http://link-to-image
 IMAGEBUTTON: http://google.com, file.jpg, the text
-	</textarea>
-	<button id="generate" type="button">Generate JSON</button>
+		</textarea>
+		<button id="decode" type="button">Generate JSON</button>
+	</div>
+
+	<div class="left">
+		<textarea id="content-json"></textarea>
+		<button id="encode" type="button">Generate Markup</button>
+	</div>
+
 	<script src="dbg.js" type="text/javascript" charset="utf-8"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/mootools/1.4.5/mootools-yui-compressed.js" type="text/javascript" charset="utf-8"></script>
 	<script src="SimpleParse.js" type="text/javascript" charset="utf-8"></script>
+	<script src="Modules.js" type="text/javascript" charset="utf-8"></script>
 	<script src="demo.js" type="text/javascript" charset="utf-8"></script>
 </body>
 </html>

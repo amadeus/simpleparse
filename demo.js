@@ -1,15 +1,22 @@
 (function(){
 
-var sections = ['intro', 'step', 'footer'];
+var markup = document.id('content-markup'),
+	decode = document.id('decode'),
+	json = document.id('content-json'),
+	encode = document.id('encode');
 
-var textarea = document.id('content'),
-	button = document.id('generate');
+decode.addEvent('click', function(){
+	var value = JSON.encode(SimpleParse.decode(markup.value));
+	if (!value) return;
+	json.value = value;
+	markup.value = '';
+});
 
-
-SimpleParse.addSections(sections);
-
-button.addEvent('click', function(){
-	dbg.log(SimpleParse.decode(textarea.value));
+encode.addEvent('click', function(){
+	var value = JSON.decode(json.value);
+	if (!value) return;
+	markup.value = SimpleParse.encode(value);
+	json.value = '';
 });
 
 }).call(this);

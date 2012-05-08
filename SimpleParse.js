@@ -1,9 +1,10 @@
 (function(){
 
-if (!window.String.prototype.startsWith)
+if (!window.String.prototype.startsWith){
 	String.prototype.startsWith = function (str){
 		return this.slice(0, str.length) == str;
 	};
+}
 
 var SimpleParse = window.SimpleParse = {
 
@@ -14,18 +15,36 @@ var SimpleParse = window.SimpleParse = {
 		});
 	},
 
-	addModule: function(key, parser){
+	addModule: function(key, encode, decode){
 		if (
 			typeOf(key) !== 'string' ||
-			typeOf(parser) !== 'function'
+			typeOf(decode) !== 'function' ||
+			typeOf(encode) !== 'function'
 		)
-			throw new Error('SimpleParse: Missing a required argument [key, parser]: ' + key + ',' + parser);
+			throw new Error('SimpleParse: Missing a required argument [key, parser]: ' + key + ', ' + decode + ', ' + encode);
 
-		SimpleParse.Sections[key] = parser;
+		SimpleParse.Modules[key] = {
+			encode: encode,
+			decode: decode
+		};
 	},
 
-	encode: function(json){
-		dbg.log('not built yet');
+	encode: function(model){
+		if (typeOf(model) !== 'object')
+			throw new Error('SimpleParse: Must pass a valid object model to decode: ' + model);
+
+		var reference = {
+			model: model,
+			string: ''
+		};
+
+		Object.each(model, function(sections, key){
+			sections.each(function(section){
+				Internal.encodeSection(section, key, reference);
+			});
+		});
+
+		return reference.string;
 	},
 
 	decode: function(string){
@@ -59,84 +78,22 @@ var SimpleParse = window.SimpleParse = {
 	Sections: [],
 
 	Modules: {
-		code: function(string){
-			var arr = string.split(','),
-				code, title;
 
-			code = arr.splice(0, 1)[0].trim();
-			title = arr.join(',').trim();
+		paragraph: {
 
-			title = (title === '') ? 'Code' : title;
+			encode: function(model){
+				return model.content;
+			},
 
-			return {
-				type: 'code',
-				code: code,
-				title: title
-			};
-		},
+			decode: function(string){
+				// TODO: Parse out links...
 
-		map: function(string){
-			var arr = string.split(','),
-				href, image, label;
-
-			// If we don't have enough attributes, fallback to paragraph
-			if (arr.length < 2)
-				return SimpleParse.Modules.paragraph(string, reference);
-
-			href = arr.splice(0, 1)[0].trim();
-			src = arr.splice(0, 1)[0].trim();
-			label = arr.join(',').trim();
-
-			label = (label === '') ? 'View in Maps' : label;
-
-			return {
-				type: 'map',
-				href: href,
-				src: src,
-				label: label
-			};
-		},
-
-		imagebutton: function(string){
-			var arr = string.split(','),
-				href, src, alt;
-
-			// If we don't have enough attributes, fallback to paragraph
-			if (arr.length < 2)
-				return SimpleParse.Modules.paragraph(string, reference);
-
-			href = arr.splice(0, 1)[0].trim();
-			src = arr.splice(0, 1)[0].trim();
-			title = arr.join(',').trim();
-
-			return {
-				type: 'imagebutton',
-				src: src,
-				href: href,
-				title: title
-			};
-		},
-
-		image: function(string){
-			var arr = string.split(','),
-				src = arr.splice(0, 1)[0].trim(),
-				alt = arr.join(',').trim();
-
-			return {
-				type: 'image',
-				src: src,
-				alt: alt
-			};
-		},
-
-		paragraph: function(string){
-			// TODO: Parse out links...
-
-			// Add to section
-			return {
-				type: 'paragraph',
-				content: string.trim()
-			};
+				// Add to section
+				return {
+					type: 'paragraph',
+					content: string.trim()
+				};
+			}
 		}
 	}
 
@@ -154,16 +111,18 @@ var Internal = {
 
 	// Parses string to determine if it has a model, otherwise fallback to paragraph
 	parseModule: function(string, reference){
-		var parsedModule = null;
+		var parsedModule = null, module;
 
 		// First check to see if we have a data model this module
-		Object.each(SimpleParse.Modules, function(fn, key){
+		Object.each(SimpleParse.Modules, function(obj, key){
 			if (parsedModule) return;
-			var match = key.toUpperCase() + ':';
+			var match = key.toUpperCase() + ':', module;
 			if (string.startsWith(match)) {
-				parsedModule = true;
 				string = Internal.cleanKeyFromString(key, string);
-				reference.section.modules.push(fn(string, reference));
+				module = obj.decode(string);
+				if (!module) return;
+				reference.section.modules.push(module);
+				parsedModule = true;
 			}
 		});
 
@@ -172,7 +131,8 @@ var Internal = {
 
 		// Fallback on the paragraph model
 		string = Internal.cleanKeyFromString('paragraph', string);
-		reference.section.modules.push(SimpleParse.Modules.paragraph(string, reference));
+		module = SimpleParse.Modules.paragraph.decode(string);
+		if (module) reference.section.modules.push(module);
 	},
 
 	// Parse section from line, if it exists, set it up as current section, otherwise return the current section
@@ -214,6 +174,29 @@ var Internal = {
 			title: title,
 			modules: []
 		};
+	},
+
+	encodeSection: function(section, sectionKey, reference){
+		reference.string += sectionKey.toUpperCase() + ': ' + section.title + '\n';
+
+		section.modules.each(function(module){
+			var string = Internal.encodeModule(module);
+			if (string) reference.string += string + '\n';
+		});
+
+		reference.string += '\n';
+	},
+
+	encodeModule: function(model, reference){
+		var encoder = window.SimpleParse.Modules[model.type].encode,
+			string, type;
+		if (encoder) {
+			string =  encoder(model);
+			type = (model.type === 'paragraph') ? '' : model.type.toUpperCase() + ': ';
+			return type + string;
+		}
+
+		return null;
 	}
 
 };
