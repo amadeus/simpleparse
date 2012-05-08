@@ -16,11 +16,7 @@ var SimpleParse = window.SimpleParse = {
 	},
 
 	addModule: function(key, encode, decode){
-		if (
-			typeOf(key) !== 'string' ||
-			typeOf(decode) !== 'function' ||
-			typeOf(encode) !== 'function'
-		)
+		if (typeOf(key) !== 'string' || typeOf(decode) !== 'function' || typeOf(encode) !== 'function')
 			throw new Error('SimpleParse: Missing a required argument [key, parser]: ' + key + ', ' + decode + ', ' + encode);
 
 		SimpleParse.Modules[key] = {
@@ -48,7 +44,7 @@ var SimpleParse = window.SimpleParse = {
 	},
 
 	decode: function(string){
-			// Base Model
+		// Base Model
 		var reference = {
 				model: {},
 				section: null
@@ -56,7 +52,7 @@ var SimpleParse = window.SimpleParse = {
 			// Each line represents a step or module
 			units = string.split('\n');
 
-		if (!units.length) return;
+		if (!string || !units.length) return null;
 
 		// Parse out each line
 		units.each(function(unit){
@@ -71,6 +67,8 @@ var SimpleParse = window.SimpleParse = {
 			// Parse out the next module
 			Internal.parseModule(unit, reference);
 		});
+
+		if (!reference.section) return null;
 
 		return reference.model;
 	},

@@ -6,9 +6,9 @@ var markup = document.id('content-markup'),
 	encode = document.id('encode');
 
 decode.addEvent('click', function(){
-	var value = JSON.encode(SimpleParse.decode(markup.value));
+	var value = SimpleParse.decode(markup.value);
 	if (!value) return;
-	json.value = value;
+	json.value = JSON.encode(value);
 	markup.value = '';
 });
 
